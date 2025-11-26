@@ -1,0 +1,75 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Admin Dashboard - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<!-- Quick Stats -->
+<div class="stats">
+    <div class="stat-item">
+        <div class="stat-number">{{ total_routes }}</div>
+        <div>Total Routes</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ active_routes }}</div>
+        <div>Active Routes</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ archived_routes }}</div>
+        <div>Archived Routes</div>
+    </div>
+</div>
+
+<!-- Admin Actions -->
+<div class="admin-actions">
+    <div class="card">
+        <h3>Route Management</h3>
+        <div class="action-buttons">
+            <a href="{% url 'project:add_route' %}" class="btn-primary">Add New Route</a>
+            <a href="{% url 'project:manage_routes' %}" class="btn-secondary">Manage Existing Routes</a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>Member Management</h3>
+        <div class="action-buttons">
+            <a href="{% url 'project:admin_members' %}" class="btn-primary">Manage Members</a>
+            <a href="{% url 'project:member_list' %}" class="btn-secondary">View Member Directory</a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h3>Data & Analytics</h3>
+        <div class="action-buttons">
+            <a href="{% url 'project:admin_completions' %}" class="btn-primary">View All Completions</a>
+            <a href="{% url 'project:area_list' %}" class="btn-secondary">Browse Areas</a>
+        </div>
+    </div>
+    
+    <!-- TODO: Add member management section -->
+    <!-- TODO: Add statistics/analytics section -->
+    <!-- TODO: Add bulk operations for routes -->
+
+    
+    <!-- TODO: Add member management section -->
+    <!-- TODO: Add statistics/analytics section -->
+    <!-- TODO: Add bulk operations for routes -->
+
+<!-- Recent Activity -->
+<div class="card">
+    <h3>Recent Completions</h3>
+    {% if recent_completions %}
+        {% for completion in recent_completions %}
+            <div class="completion-item">
+                <strong>{{ completion.member }}</strong> completed 
+                <strong>{{ completion.route }}</strong> 
+                on {{ completion.date_completed }}
+                ({{ completion.difficulty_rating }} stars)
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No recent completions.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends 'project/base.html' %}
+
+{% block title %}My Profile - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>My Climbing Profile</h2>
+    <a href="{% url 'project:home' %}" class="btn-secondary">← Back to Home</a>
+</div>
+
+<!-- Profile Header -->
+<div class="card">
+    <div class="page-header">
+        <div>
+            <h3>{{ member.first_name }} {{ member.last_name }}</h3>
+            <p class="member-admin-info">
+                Member #{{ member.member_number }} | 
+                Member since {{ member.date_joined|date:"F Y" }}
+            </p>
+        </div>
+        <a href="{% url 'project:edit_profile' %}" class="btn-secondary">Edit Profile</a>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="stats">
+    <div class="stat-item">
+        <div class="stat-number">{{ total_completions }}</div>
+        <div>Total Sends</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ unique_routes }}</div>
+        <div>Unique Routes</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ recent_activity_count }}</div>
+        <div>Sends This Month</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ areas_climbed.count }}</div>
+        <div>Areas Climbed</div>
+    </div>
+</div>
+
+<!-- Grade Distribution -->
+{% if grade_counts %}
+<div class="card">
+    <h3>Grade Distribution</h3>
+    <div class="grade-distribution-grid">
+        {% for grade, count in grade_counts.items %}
+            <div class="grade-distribution-item">
+                <div class="grade-distribution-number">{{ count }}</div>
+                <div class="grade-distribution-label">{{ grade }}</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Areas Climbed -->
+{% if areas_climbed %}
+<div class="card">
+    <h3>Areas You've Conquered</h3>
+    <div class="area-stats-grid">
+        {% for area in areas_climbed %}
+            <div class="area-stat-item">
+                <h4 class="area-stat-title">{{ area.route__area__name }}</h4>
+                <p class="area-stat-count">
+                    <strong>{{ area.count }}</strong> route{{ area.count|pluralize }} completed
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Completions -->
+<div class="card">
+    <h3>Recent Completions</h3>
+    {% if completions %}
+        <div class="completion-list">
+            {% for completion in completions %}
+                <div class="completion-item">
+                    <div class="completion-info">
+                        <h4>
+                            <a href="{% url 'project:route_detail' completion.route.pk %}">
+                                {% if completion.route.name %}
+                                    {{ completion.route.name }}
+                                {% else %}
+                                    {{ completion.route.color|title }} Route
+                                {% endif %}
+                            </a>
+                            <span class="route-grade">{{ completion.route.grade }}</span>
+                        </h4>
+                        <p class="completion-meta">
+                            <span class="route-color route-color-{{ completion.route.color }}"></span>
+                            {{ completion.route.area.name }} | 
+                            {{ completion.date_completed|date:"M d, Y" }}
+                        </p>
+                        {% if completion.notes %}
+                            <p class="completion-notes">
+                                "{{ completion.notes|truncatewords:15 }}"
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="completion-rating">
+                        <div class="completion-rating-value">
+                            {{ completion.difficulty_rating }}★
+                        </div>
+                        <div class="completion-rating-label">
+                            Rating
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if total_completions > 10 %}
+            <div class="text-center">
+                <p class="member-admin-info">
+                    Showing 10 of {{ total_completions }} total completions
+                </p>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            No route completions yet. <a href="{% url 'project:route_list' %}">Start climbing!</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+        <a href="{% url 'project:route_list' %}" class="btn-primary">Browse Routes</a>
+        <a href="{% url 'project:area_list' %}" class="btn-secondary">Explore Areas</a>
+        {% if user.is_staff %}
+            <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">Admin Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- TODO: Add climbing goals/targets -->
+<!-- TODO: Add progress charts -->
+<!-- TODO: Add personal records (hardest grade, most sends in a day, etc.) -->
+{% endblock %}

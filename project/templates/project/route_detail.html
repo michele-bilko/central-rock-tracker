@@ -1,0 +1,117 @@
+{% extends 'project/base.html' %}
+
+{% block title %}{{ route }} - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>
+    {% if route.name %}
+        {{ route.name }}
+    {% else %}
+        {{ route.color|title }} Route
+    {% endif %}
+    <span class="route-grade">{{ route.grade }}</span>
+</h2>
+
+<!-- Route Info -->
+<div class="card">
+    <div class="route-details">
+        <p>
+            <span class="route-color route-color-{{ route.color }}"></span>
+            <strong>Color:</strong> {{ route.color|title }} | 
+            <strong>Area:</strong> <a href="{% url 'project:area_detail' route.area.pk %}">{{ route.area.name }}</a>
+        </p>
+        <p>
+            <strong>Set by:</strong> {{ route.setter_name }} | 
+            <strong>Date set:</strong> {{ route.date_set }} |
+            <strong>Status:</strong> {% if route.is_active %}Active{% else %}Archived{% endif %}
+        </p>
+        
+        {% if completions %}
+            <p><strong>Total sends:</strong> {{ completions.count }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Log Completion Form (for logged-in members) -->
+{% if user.is_authenticated and route.is_active %}
+    {% if not user_has_completed %}
+        <div class="card">
+            <h3>Log Your Completion</h3>
+            <p>Send this route? Log it here!</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.date_completed.id_for_label }}">Date Completed:</label>
+                        {{ form.date_completed }}
+                        {% if form.date_completed.errors %}
+                            <div class="error">{{ form.date_completed.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.difficulty_rating.id_for_label }}">Difficulty Rating:</label>
+                        {{ form.difficulty_rating }}
+                        {% if form.difficulty_rating.errors %}
+                            <div class="error">{{ form.difficulty_rating.errors.0 }}</div>
+                        {% endif %}
+                        <small>How difficult did this feel to you?</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.notes.id_for_label }}">Notes:</label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="error">{{ form.notes.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Log Completion</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="card completion-status">
+            <p><strong>✓ You've completed this route!</strong></p>
+            <p>Completed on {{ user_completion.date_completed }} - Rated {{ user_completion.difficulty_rating }} stars</p>
+            {% if user_completion.notes %}
+                <p><em>"{{ user_completion.notes }}"</em></p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% elif not user.is_authenticated %}
+    <div class="card">
+        <p><a href="{% url 'project:login' %}">Login</a> to log your completion of this route!</p>
+    </div>
+{% endif %}
+
+<!-- Recent Completions -->
+{% if completions %}
+    <div class="card">
+        <h3>Recent Completions</h3>
+        {% for completion in completions %}
+            <div class="completion-item">
+                <strong>{{ completion.member }}</strong> - {{ completion.date_completed }}
+                <span class="rating">{{ completion.difficulty_rating }} stars</span>
+                {% if completion.notes %}
+                    <p><em>"{{ completion.notes }}"</em></p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Navigation -->
+<div class="navigation">
+    <a href="{% url 'project:area_detail' route.area.pk %}" class="btn-secondary">← Back to {{ route.area.name }}</a>
+</div>
+
+<!-- TODO: Add route photo -->
+<!-- TODO: Add route beta/tips section -->
+<!-- TODO: Add "like" or "favorite" functionality -->
+<!-- TODO: Add difficulty consensus (average rating from all users) -->
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'project/base.html' %}
+
+{% block title %}All Completions - Admin - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>All Route Completions</h2>
+    <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
+</div>
+
+<!-- Filter Section -->
+<div class="card">
+    <h3>Filter Completions</h3>
+    <form method="get" class="filter-form">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Route:</label>
+                <select name="route" class="form-control">
+                    <option value="">All Routes</option>
+                    {% for route in all_routes %}
+                        <option value="{{ route.id }}" {% if current_filters.route == route.id|stringformat:"s" %}selected{% endif %}>
+                            {% if route.name %}{{ route.name }}{% else %}{{ route.color|title }} Route{% endif %} 
+                            ({{ route.grade }}) - {{ route.area.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Member:</label>
+                <select name="member" class="form-control">
+                    <option value="">All Members</option>
+                    {% for member in all_members %}
+                        <option value="{{ member.id }}" {% if current_filters.member == member.id|stringformat:"s" %}selected{% endif %}>
+                            {{ member.first_name }} {{ member.last_name }} (#{{ member.member_number }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>Area:</label>
+                <select name="area" class="form-control">
+                    <option value="">All Areas</option>
+                    {% for area in all_areas %}
+                        <option value="{{ area.id }}" {% if current_filters.area == area.id|stringformat:"s" %}selected{% endif %}>
+                            {{ area.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Date Range:</label>
+                <select name="date_range" class="form-control">
+                    <option value="7" {% if current_filters.date_range == "7" %}selected{% endif %}>Last 7 days</option>
+                    <option value="30" {% if current_filters.date_range == "30" %}selected{% endif %}>Last 30 days</option>
+                    <option value="90" {% if current_filters.date_range == "90" %}selected{% endif %}>Last 90 days</option>
+                    <option value="365" {% if current_filters.date_range == "365" %}selected{% endif %}>Last year</option>
+                    <option value="all" {% if current_filters.date_range == "all" %}selected{% endif %}>All time</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Apply Filters</button>
+            <a href="{% url 'project:admin_completions' %}" class="btn-secondary">Clear Filters</a>
+        </div>
+    </form>
+</div>
+
+<!-- Results Summary -->
+<div class="card">
+    <div class="page-header">
+        <h3>Completion Results</h3>
+        <div class="member-admin-info">
+            <strong>{{ total_completions }}</strong> completion{{ total_completions|pluralize }} found
+        </div>
+    </div>
+</div>
+
+<!-- Completions List -->
+<div class="card">
+    {% if completions %}
+        <div class="completion-admin-list">
+            {% for completion in completions %}
+                <div class="completion-admin-item" style="padding: 1.5rem; border-bottom: 1px solid var(--light-gray); display: grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr; gap: 1rem; align-items: center;">
+                    <!-- Member Info -->
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; color: var(--dark-gray);">
+                            {{ completion.member.first_name }} {{ completion.member.last_name }}
+                        </h4>
+                        <p style="margin: 0; color: var(--medium-gray); font-size: 0.9rem;">
+                            Member #{{ completion.member.member_number }}
+                        </p>
+                    </div>
+                    
+                    <!-- Route Info -->
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0;">
+                            <a href="{% url 'project:route_detail' completion.route.pk %}" style="text-decoration: none; color: var(--dark-gray);">
+                                {% if completion.route.name %}
+                                    {{ completion.route.name }}
+                                {% else %}
+                                    {{ completion.route.color|title }} Route
+                                {% endif %}
+                            </a>
+                            <span class="route-grade">{{ completion.route.grade }}</span>
+                        </h4>
+                        <p style="margin: 0; color: var(--medium-gray); font-size: 0.9rem;">
+                            <span class="route-color route-color-{{ completion.route.color }}"></span>
+                            {{ completion.route.area.name }}
+                        </p>
+                    </div>
+                    
+                    <!-- Date -->
+                    <div style="text-align: center;">
+                        <div style="font-weight: 600; color: var(--dark-gray);">
+                            {{ completion.date_completed|date:"M d" }}
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--medium-gray);">
+                            {{ completion.date_completed|date:"Y" }}
+                        </div>
+                    </div>
+                    
+                    <!-- Rating -->
+                    <div style="text-align: center;">
+                        <div style="color: var(--accent-orange); font-weight: 700; font-size: 1.1rem;">
+                            {{ completion.difficulty_rating }}★
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--medium-gray);">
+                            Rating
+                        </div>
+                    </div>
+                    
+                    <!-- Notes Preview -->
+                    <div style="text-align: center;">
+                        {% if completion.notes %}
+                            <div style="color: var(--primary-blue); font-size: 0.9rem;" title="{{ completion.notes }}">
+                                📝 Notes
+                            </div>
+                        {% else %}
+                            <div style="color: var(--light-gray); font-size: 0.9rem;">
+                                No notes
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Show notes if they exist -->
+                {% if completion.notes %}
+                    <div style="padding: 0 1.5rem 1rem 1.5rem; font-style: italic; color: var(--medium-gray); background: var(--light-gray); border-bottom: 1px solid #e5e7eb;">
+                        "{{ completion.notes }}"
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if completions.has_other_pages %}
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--light-gray);">
+                {% if completions.has_previous %}
+                    <a href="?page=1{% if request.GET.route %}&route={{ request.GET.route }}{% endif %}{% if request.GET.member %}&member={{ request.GET.member }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.date_range %}&date_range={{ request.GET.date_range }}{% endif %}" class="btn-secondary">First</a>
+                    <a href="?page={{ completions.previous_page_number }}{% if request.GET.route %}&route={{ request.GET.route }}{% endif %}{% if request.GET.member %}&member={{ request.GET.member }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.date_range %}&date_range={{ request.GET.date_range }}{% endif %}" class="btn-secondary">Previous</a>
+                {% endif %}
+                
+                <span style="color: var(--medium-gray);">
+                    Page {{ completions.number }} of {{ completions.paginator.num_pages }}
+                </span>
+                
+                {% if completions.has_next %}
+                    <a href="?page={{ completions.next_page_number }}{% if request.GET.route %}&route={{ request.GET.route }}{% endif %}{% if request.GET.member %}&member={{ request.GET.member }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.date_range %}&date_range={{ request.GET.date_range }}{% endif %}" class="btn-secondary">Next</a>
+                    <a href="?page={{ completions.paginator.num_pages }}{% if request.GET.route %}&route={{ request.GET.route }}{% endif %}{% if request.GET.member %}&member={{ request.GET.member }}{% endif %}{% if request.GET.area %}&area={{ request.GET.area }}{% endif %}{% if request.GET.date_range %}&date_range={{ request.GET.date_range }}{% endif %}" class="btn-secondary">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div style="text-align: center; padding: 3rem; color: var(--medium-gray);">
+            <h4>No completions found</h4>
+            <p>Try adjusting your filters or check back later for new activity.</p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Back to Dashboard -->
+<div style="margin-top: 2rem;">
+    <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
+</div>
+
+<!-- TODO: Add export functionality (CSV/PDF) -->
+<!-- TODO: Add completion analytics and charts -->
+<!-- TODO: Add bulk operations for completions -->
+{% endblock %}

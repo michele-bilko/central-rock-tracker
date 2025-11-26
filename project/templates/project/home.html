@@ -1,0 +1,37 @@
+{% extends 'project/base.html' %}
+
+{% block content %}
+<h2>Welcome to Central Rock Gym Fenway</h2>
+
+<!-- Basic Stats -->
+<div class="stats">
+    <div class="stat-item">
+        <div class="stat-number">{{ total_areas }}</div>
+        <div>Climbing Areas</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ total_routes }}</div>
+        <div>Active Routes</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">{{ total_members }}</div>
+        <div>Members</div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card">
+    <h3>Recent Completions</h3>
+    {% if recent_completions %}
+        {% for completion in recent_completions %}
+            <div class="completion-item">
+                <strong>{{ completion.member }}</strong> completed 
+                <strong>{{ completion.route }}</strong> 
+                on {{ completion.date_completed }}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No recent completions.</p>
+    {% endif %}
+</div>
+{% endblock %}

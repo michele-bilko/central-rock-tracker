@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Central Rock Gym - Fenway{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'project/css/styles.css' %}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1>Central Rock Gym - Fenway</h1>
+            <p>Route Tracking System</p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <ul>
+                <li><a href="{% url 'project:home' %}">Home</a></li>
+                <li><a href="{% url 'project:area_list' %}">Areas</a></li>
+                <li><a href="{% url 'project:route_list' %}">Routes</a></li>
+                
+                <!-- Members link only for admins -->
+                {% if user.is_authenticated and user.is_staff %}
+                    <li><a href="{% url 'project:member_list' %}">Members</a></li>
+                {% endif %}
+                
+                <!-- Links for authenticated users -->
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'project:profile' %}">My Profile</a></li>
+                    
+                    <!-- Admin section -->
+                    {% if user.is_staff %}
+                        <li><a href="{% url 'project:admin_dashboard' %}">Admin Dashboard</a></li>
+                        <li><a href="{% url 'project:add_route' %}">Add Route</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            
+            <!-- User account section -->
+            <div class="user-section">
+                {% if user.is_authenticated %}
+                    <span>Welcome, {{ user.first_name|default:user.username }}!</span>
+                    <form method="post" action="{% url 'project:logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">Logout</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'project:login' %}" class="btn-primary">Login</a>
+                    <a href="{% url 'project:register' %}" class="btn-secondary">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Central Rock Gym Fenway - CS412 Final Project</p>
+        </div>
+    </footer>
+</body>
+</html>

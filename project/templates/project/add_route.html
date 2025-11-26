@@ -1,0 +1,79 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Add New Route - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Add New Route</h2>
+    <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
+</div>
+
+<div class="card">
+    <h3>Create a New Climbing Route</h3>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.name.id_for_label }}">Route Name (Optional):</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="error">{{ form.name.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.grade.id_for_label }}">Grade:</label>
+                {{ form.grade }}
+                {% if form.grade.errors %}
+                    <div class="error">{{ form.grade.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.color.id_for_label }}">Color:</label>
+                {{ form.color }}
+                {% if form.color.errors %}
+                    <div class="error">{{ form.color.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.area.id_for_label }}">Area:</label>
+                {{ form.area }}
+                {% if form.area.errors %}
+                    <div class="error">{{ form.area.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.date_set.id_for_label }}">Date Set:</label>
+                {{ form.date_set }}
+                {% if form.date_set.errors %}
+                    <div class="error">{{ form.date_set.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.setter_name.id_for_label }}">Setter Name:</label>
+            {{ form.setter_name }}
+            {% if form.setter_name.errors %}
+                <div class="error">{{ form.setter_name.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Add Route</button>
+            <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- TODO: Add route photo upload -->
+<!-- TODO: Add route description field -->
+<!-- TODO: Add tags/categories for routes -->
+{% endblock %}

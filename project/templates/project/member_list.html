@@ -1,0 +1,25 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Members - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>Gym Members</h2>
+
+<div class="member-list">
+    {% for member in members %}
+        <div class="member-item">
+            <h3>{{ member.first_name }} {{ member.last_name }}</h3>
+            <p>
+                <strong>Member #:</strong> {{ member.member_number }}<br>
+                <strong>Email:</strong> {{ member.email }}<br>
+                <strong>Joined:</strong> {{ member.date_joined }}
+                {% if member.is_admin %}
+                    <br><strong>Admin</strong>
+                {% endif %}
+            </p>
+        </div>
+    {% empty %}
+        <p>No members found.</p>
+    {% endfor %}
+</div>
+{% endblock %}

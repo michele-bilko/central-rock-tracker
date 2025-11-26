@@ -1,0 +1,123 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Delete Member - Admin - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Delete Member Account</h2>
+    <a href="{% url 'project:admin_members' %}" class="btn-secondary">← Back to Members</a>
+</div>
+
+<!-- Warning Card -->
+<div class="card" style="background: #fef2f2; border: 2px solid var(--danger-red);">
+    <h3 style="color: var(--danger-red); margin-bottom: 1rem;">⚠️ Permanent Deletion Warning</h3>
+    <p style="color: #991b1b; font-weight: 500;">
+        You are about to permanently delete this member account. This action cannot be undone.
+    </p>
+</div>
+
+<!-- Member Information -->
+<div class="card">
+    <h3>Member to be Deleted</h3>
+    <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 0.5rem; margin: 1rem 0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+                <h4 style="margin: 0 0 0.5rem 0;">{{ member.first_name }} {{ member.last_name }}</h4>
+                <p style="margin: 0; color: var(--medium-gray);">{{ member.email }}</p>
+                {% if member.user %}
+                    <p style="margin: 0; color: var(--medium-gray); font-size: 0.9rem;">
+                        Username: {{ member.user.username }}
+                    </p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <p style="margin: 0;"><strong>Member #:</strong> {{ member.member_number }}</p>
+                <p style="margin: 0;"><strong>Joined:</strong> {{ member.date_joined|date:"F d, Y" }}</p>
+                <p style="margin: 0;"><strong>Route Completions:</strong> {{ completion_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- What will be deleted -->
+<div class="card">
+    <h3>What will be permanently deleted:</h3>
+    <ul style="color: var(--danger-red); font-weight: 500;">
+        <li>User account and login credentials</li>
+        <li>Member profile and personal information</li>
+        <li>All {{ completion_count }} route completion{{ completion_count|pluralize }} and notes</li>
+        <li>All climbing statistics and progress data</li>
+        <li>Any admin privileges (if applicable)</li>
+    </ul>
+</div>
+
+<!-- Confirmation Form -->
+<div class="card">
+    <h3>Confirm Deletion</h3>
+    <p style="margin-bottom: 1.5rem;">
+        To confirm deletion, type <strong style="color: var(--danger-red);">DELETE</strong> in the field below and click the delete button.
+    </p>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="confirm" style="color: var(--danger-red); font-weight: 600;">
+                Type "DELETE" to confirm:
+            </label>
+            <input type="text" 
+                   name="confirm" 
+                   id="confirm" 
+                   class="form-control" 
+                   placeholder="Type DELETE here"
+                   required
+                   style="border-color: var(--danger-red);">
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" 
+                    class="btn-primary" 
+                    style="background: var(--danger-red); border-color: var(--danger-red);"
+                    onclick="return confirm('Are you absolutely sure? This cannot be undone!')">
+                🗑️ Permanently Delete Member
+            </button>
+            <a href="{% url 'project:admin_members' %}" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- Safety Notice -->
+<div class="card" style="background: #f0f9ff; border: 1px solid #bae6fd;">
+    <h4 style="color: #0369a1; margin-bottom: 0.5rem;">💡 Safety Tip</h4>
+    <p style="color: #0369a1; margin: 0;">
+        Consider archiving or deactivating accounts instead of deleting them if you might need to restore the data later. 
+        Deletion is permanent and cannot be reversed.
+    </p>
+</div>
+
+<script>
+// Add extra confirmation for deletion
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const confirmInput = document.getElementById('confirm');
+    const deleteButton = form.querySelector('button[type="submit"]');
+    
+    // Initially disable the delete button
+    deleteButton.disabled = true;
+    deleteButton.style.opacity = '0.5';
+    
+    // Enable button only when "DELETE" is typed
+    confirmInput.addEventListener('input', function() {
+        if (this.value === 'DELETE') {
+            deleteButton.disabled = false;
+            deleteButton.style.opacity = '1';
+        } else {
+            deleteButton.disabled = true;
+            deleteButton.style.opacity = '0.5';
+        }
+    });
+});
+</script>
+
+{% endblock %}

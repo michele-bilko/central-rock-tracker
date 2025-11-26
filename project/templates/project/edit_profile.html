@@ -1,0 +1,103 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Edit Profile - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Edit Your Profile</h2>
+    <a href="{% url 'project:profile' %}" class="btn-secondary">← Back to Profile</a>
+</div>
+
+<div class="card">
+    <h3>Update Your Information</h3>
+    <p class="member-admin-info">
+        Keep your profile information up to date so other climbers can find you!
+    </p>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Account Information -->
+        <div class="profile-section-divider">
+            <h4 class="profile-section-title">Account Information</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Username:</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="error">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email Address:</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="error">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Personal Information -->
+        <div class="profile-section-divider">
+            <h4 class="profile-section-title">Personal Information</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.first_name.id_for_label }}">First Name:</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="error">{{ form.first_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.last_name.id_for_label }}">Last Name:</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="error">{{ form.last_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gym Information -->
+        <div>
+            <h4 class="profile-section-title">Gym Information</h4>
+            
+            <div class="form-group">
+                <label for="{{ form.member_number.id_for_label }}">Member Number:</label>
+                {{ form.member_number }}
+                {% if form.member_number.errors %}
+                    <div class="error">{{ form.member_number.errors.0 }}</div>
+                {% endif %}
+                <small class="profile-section-note">
+                    Your Central Rock Gym membership number
+                </small>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Changes</button>
+            <a href="{% url 'project:profile' %}" class="btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<!-- Profile Tips -->
+<div class="card info-card">
+    <h3 class="info-title">Profile Tips</h3>
+    <ul class="info-text">
+        <li>Use your real name so other climbers can recognize you</li>
+        <li>Keep your email updated for important gym notifications</li>
+        <li>Your member number helps staff assist you quickly</li>
+        <li>Profile information is visible to other gym members</li>
+    </ul>
+</div>
+
+<!-- TODO: Add profile picture upload -->
+<!-- TODO: Add climbing preferences (favorite styles, goals, etc.) -->
+<!-- TODO: Add privacy settings -->
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Areas - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>Climbing Areas</h2>
+
+<div class="area-list">
+    {% for area in areas %}
+        <div class="area-item">
+            <h3>{{ area.name }}</h3>
+            {% if area.description %}
+                <p>{{ area.description }}</p>
+            {% endif %}
+            <p><small>Area ID: {{ area.pk }} (link coming soon)</small></p>
+        </div>
+    {% empty %}
+        <p>No areas found.</p>
+    {% endfor %}
+</div>
+
+<!-- TODO: Add area images -->
+<!-- TODO: Add route count per area -->
+{% endblock %}

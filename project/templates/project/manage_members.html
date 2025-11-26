@@ -1,0 +1,144 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Manage Members - Admin - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Manage Members</h2>
+    <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
+</div>
+
+<!-- Search and Summary -->
+<div class="card">
+    <div class="page-header">
+        <h3>Member Directory</h3>
+        <div class="member-admin-info">
+            <strong>{{ total_members }}</strong> total member{{ total_members|pluralize }}
+        </div>
+    </div>
+    
+    <!-- Search Form -->
+    <form method="get">
+        <div class="page-header">
+            <div class="form-group">
+                <label for="search">Search Members:</label>
+                <input type="text" name="search" id="search" class="form-control" 
+                       value="{{ search_query }}" 
+                       placeholder="Search by name, email, or member number...">
+            </div>
+            <div>
+                <button type="submit" class="btn-primary">Search</button>
+                {% if search_query %}
+                    <a href="{% url 'project:admin_members' %}" class="btn-secondary">Clear</a>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+    
+    {% if search_query %}
+        <p class="member-admin-info">
+            Showing results for "<strong>{{ search_query }}</strong>"
+        </p>
+    {% endif %}
+</div>
+
+<!-- Members List -->
+<div class="card">
+    {% if members %}
+        <div class="member-admin-list">
+            {% for member in members %}
+                <div class="member-admin-grid">
+                    <!-- Member Info -->
+                    <div>
+                        <h4 class="member-admin-item h4">
+                            {{ member.first_name }} {{ member.last_name }}
+                            {% if member.is_admin %}
+                                <span class="admin-badge">ADMIN</span>
+                            {% endif %}
+                        </h4>
+                        <p class="member-admin-info">
+                            {{ member.email }}
+                        </p>
+                        {% if member.user %}
+                            <p class="member-admin-username">
+                                Username: {{ member.user.username }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Member Number -->
+                    <div class="text-center">
+                        <div class="member-stat-value">
+                            #{{ member.member_number }}
+                        </div>
+                        <div class="member-stat-label">
+                            Member ID
+                        </div>
+                    </div>
+                    
+                    <!-- Join Date -->
+                    <div class="text-center">
+                        <div class="member-stat-value">
+                            {{ member.date_joined|date:"M d, Y" }}
+                        </div>
+                        <div class="member-stat-label">
+                            Joined
+                        </div>
+                    </div>
+                    
+                    <!-- Completions -->
+                    <div class="text-center">
+                        <div class="completion-stat-value">
+                            {{ member.completion_count }}
+                        </div>
+                        <div class="member-stat-label">
+                            Sends
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="text-center">
+                        {% if not member.is_admin %}
+                            <a href="{% url 'project:delete_member' member.pk %}" 
+                               class="delete-btn"
+                               onclick="return confirm('Are you sure you want to delete this member?')">
+                                Delete
+                            </a>
+                        {% else %}
+                            <span class="protected-text">
+                                Protected
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            {% if search_query %}
+                <h4>No Members Found</h4>
+                <p>No members match your search criteria. Try a different search term.</p>
+            {% else %}
+                <h4>No Members</h4>
+                <p>No members have been registered yet.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Admin Warning -->
+<div class="card warning-card">
+    <h4 class="warning-title">⚠️ Member Management Warning</h4>
+    <ul class="warning-list">
+        <li>Deleting a member will permanently remove their account and all associated data</li>
+        <li>All route completions and notes will be deleted</li>
+        <li>Admin accounts cannot be deleted for security reasons</li>
+        <li>This action cannot be undone</li>
+    </ul>
+</div>
+
+<!-- TODO: Add member editing functionality -->
+<!-- TODO: Add bulk member operations -->
+<!-- TODO: Add member activity analytics -->
+<!-- TODO: Add export member list functionality -->
+{% endblock %}

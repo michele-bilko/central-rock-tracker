@@ -1,0 +1,43 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Routes - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Climbing Routes</h2>
+    <a href="{% url 'project:home' %}" class="btn-secondary">← Back to Home</a>
+</div>
+
+<div class="route-list">
+    {% for route in routes %}
+        <div class="route-item clickable">
+            <a href="{% url 'project:route_detail' route.pk %}" style="text-decoration: none; color: inherit;">
+                <h3>
+                    {% if route.name %}
+                        {{ route.name }}
+                    {% else %}
+                        {{ route.color|title }} Route
+                    {% endif %}
+                    <span class="route-grade">{{ route.grade }}</span>
+                </h3>
+                
+                <p>
+                    <span class="route-color route-color-{{ route.color }}"></span>
+                    <strong>Area:</strong> <a href="{% url 'project:area_detail' route.area.pk %}" style="color: var(--primary-blue);">{{ route.area.name }}</a><br>
+                    <strong>Set by:</strong> {{ route.setter_name }}<br>
+                    <strong>Date set:</strong> {{ route.date_set }}<br>
+                    <strong>Sends:</strong> {{ route.completion_count }}
+                </p>
+            </a>
+        </div>
+    {% empty %}
+        <div class="card" style="text-align: center; padding: 3rem; color: var(--medium-gray);">
+            <h3>No Routes Found</h3>
+            <p>There are currently no active routes. Check back soon for new climbs!</p>
+            {% if user.is_staff %}
+                <a href="{% url 'project:add_route' %}" class="btn-primary">Add the First Route</a>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

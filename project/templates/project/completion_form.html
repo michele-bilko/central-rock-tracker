@@ -1,0 +1,156 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Log Route Completion - Central Rock Gym Fenway{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-climbing text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-plus-circle"></i> Log Route Completion
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Congratulations on your send! Log your route completion below to track your progress.
+                    </p>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Member Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.member.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-user"></i> {{ form.member.label }}
+                                </label>
+                                {{ form.member }}
+                                {% if form.member.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.member.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Route Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.route.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-route"></i> {{ form.route.label }}
+                                </label>
+                                {{ form.route }}
+                                {% if form.route.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.route.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Only active routes are shown
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Date Completed -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date_completed.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-calendar"></i> {{ form.date_completed.label }}
+                                </label>
+                                {{ form.date_completed }}
+                                {% if form.date_completed.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.date_completed.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Difficulty Rating -->
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.difficulty_rating.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-star"></i> {{ form.difficulty_rating.label }}
+                                </label>
+                                {{ form.difficulty_rating }}
+                                {% if form.difficulty_rating.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {{ form.difficulty_rating.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle"></i> Rate how difficult this route felt to you personally
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-comment"></i> {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb"></i> Share your thoughts about the route, key moves, or tips for other climbers
+                            </div>
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'project:home' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-climbing">
+                                <i class="fas fa-check"></i> Log Completion
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="card mt-4 bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-question-circle"></i> Tips for Logging Completions
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Be honest with your difficulty rating</strong> - this helps you track your progress over time</li>
+                        <li><strong>Add notes</strong> - describe key moves, what worked well, or areas for improvement</li>
+                        <li><strong>Log regularly</strong> - keeping track of your sends helps you see patterns and growth</li>
+                        <li><strong>Include failed attempts</strong> - you can note attempts even if you didn't complete the route</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const dateInput = document.querySelector('input[type="date"]');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+    
+    // Add route information display
+    const routeSelect = document.getElementById('{{ form.route.id_for_label }}');
+    if (routeSelect) {
+        routeSelect.addEventListener('change', function() {
+            // add AJAX here to display route details when selected
+            // just add visual feedback
+            if (this.value) {
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

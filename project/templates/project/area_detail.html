@@ -1,0 +1,66 @@
+{% extends 'project/base.html' %}
+
+{% block title %}{{ area.name }} - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>{{ area.name }}</h2>
+
+<div class="card">
+    {% if area.description %}
+        <p>{{ area.description }}</p>
+    {% endif %}
+    
+    <div class="area-stats">
+        <div class="stat-item">
+            <div class="stat-number">{{ routes.count }}</div>
+            <div>Active Routes</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">{{ total_completions }}</div>
+            <div>Total Completions</div>
+        </div>
+    </div>
+</div>
+
+<!-- Routes in this area -->
+<div class="card">
+    <h3>Routes in {{ area.name }}</h3>
+    
+    {% if routes %}
+        <div class="route-list">
+            {% for route in routes %}
+                <div class="route-item">
+                    <h4>
+                        <a href="{% url 'project:route_detail' route.pk %}">
+                            {% if route.name %}
+                                {{ route.name }}
+                            {% else %}
+                                {{ route.color|title }} Route
+                            {% endif %}
+                        </a>
+                        <span class="route-grade">{{ route.grade }}</span>
+                    </h4>
+                    
+                    <p>
+                        <span class="route-color route-color-{{ route.color }}"></span>
+                        <strong>Set by:</strong> {{ route.setter_name }} | 
+                        <strong>Date:</strong> {{ route.date_set }} |
+                        <strong>Sends:</strong> {{ route.completion_count }}
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No active routes in this area currently.</p>
+    {% endif %}
+</div>
+
+<!-- Back to areas -->
+<div class="navigation">
+    <a href="{% url 'project:area_list' %}" class="btn-secondary">← Back to All Areas</a>
+</div>
+
+<!-- TODO: Add area image/photo -->
+<!-- TODO: Add area-specific statistics (grade distribution, etc.) -->
+<!-- TODO: Add route filtering within area -->
+{% endblock %}
