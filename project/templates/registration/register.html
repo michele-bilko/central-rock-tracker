@@ -1,0 +1,83 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Sign Up - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>Create Your Account</h2>
+
+<div class="card">
+    <h3>Join Central Rock Gym Fenway</h3>
+    <p>Create an account to track your climbing progress!</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Username:</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+                <div class="error">{{ form.username.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.first_name.id_for_label }}">First Name:</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div class="error">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.last_name.id_for_label }}">Last Name:</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div class="error">{{ form.last_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">Email:</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="error">{{ form.email.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.member_number.id_for_label }}">Member Number:</label>
+            {{ form.member_number }}
+            {% if form.member_number.errors %}
+                <div class="error">{{ form.member_number.errors.0 }}</div>
+            {% endif %}
+            <small>Your gym membership number</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.password1.id_for_label }}">Password:</label>
+            {{ form.password1 }}
+            {% if form.password1.errors %}
+                <div class="error">{{ form.password1.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.password2.id_for_label }}">Confirm Password:</label>
+            {{ form.password2 }}
+            {% if form.password2.errors %}
+                <div class="error">{{ form.password2.errors.0 }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Create Account</button>
+            <a href="{% url 'project:login' %}" class="btn-secondary">Already have an account? Login</a>
+        </div>
+    </form>
+</div>
+
+<!-- TODO: Add social login options (Google, Facebook) -->
+<!-- TODO: Add email verification step -->
+{% endblock %}

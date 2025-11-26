@@ -158,6 +158,7 @@ def admin_dashboard_view(request):
 
 
 @user_passes_test(is_admin)
+@user_passes_test(is_admin)
 def add_route_view(request):
     """
     Admin view to add new routes.

@@ -29,6 +29,7 @@ urlpatterns = [
     path('admin/members/', views.admin_members_view, name='admin_members'),
     path('admin/members/<int:pk>/delete/', views.delete_member_view, name='delete_member'),
     
+    
     # Area URLs
     path('areas/', views.AreaListView.as_view(), name='area_list'),
     path('areas/<int:pk>/', views.AreaDetailView.as_view(), name='area_detail'),

@@ -1,0 +1,42 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Login - Central Rock Gym{% endblock %}
+
+{% block content %}
+<h2>Login to Your Account</h2>
+
+<div class="card">
+    <h3>Welcome Back!</h3>
+    
+    {% if form.errors %}
+        <div class="error-message">
+            <p>Please correct the errors below:</p>
+            {{ form.errors }}
+        </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Username:</label>
+            {{ form.username }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Password:</label>
+            {{ form.password }}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Login</button>
+            <a href="{% url 'project:register' %}" class="btn-secondary">Need an account? Sign up</a>
+        </div>
+        
+        <input type="hidden" name="next" value="{{ next }}" />
+    </form>
+</div>
+
+<!-- TODO: Add "Remember Me" checkbox -->
+<!-- TODO: Add "Forgot Password" functionality -->
+{% endblock %}
