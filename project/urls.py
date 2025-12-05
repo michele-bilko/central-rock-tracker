@@ -1,8 +1,9 @@
 """
 project/urls.py
 Author: Michele Bilko (mbilko@bu.edu)
-CS412 Final Project - Central Rock Gym Route Tracking System
+Central Rock Gym Route Tracking System
 URL configurations including authentication and admin features.
+UPDATED: Added archive functionality
 """
 
 from django.urls import path
@@ -29,6 +30,9 @@ urlpatterns = [
     path('admin/members/', views.admin_members_view, name='admin_members'),
     path('admin/members/<int:pk>/delete/', views.delete_member_view, name='delete_member'),
     
+    # NEW: Archive functionality
+    path('admin/archived-routes/', views.archived_routes_view, name='archived_routes'),
+    path('admin/bulk-archive/', views.bulk_archive_routes, name='bulk_archive_routes'),
     
     # Area URLs
     path('areas/', views.AreaListView.as_view(), name='area_list'),
@@ -43,7 +47,3 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
 ]
-
-# TODO: Add member detail URLs
-# TODO: Add completion list URLs  
-# TODO: Add API endpoints for mobile app

@@ -1,8 +1,9 @@
 """
 project/forms.py
 Author: Michele Bilko (mbilko@bu.edu)
-CS412 Final Project - Central Rock Gym Route Tracking System
+Central Rock Gym Route Tracking System
 Forms for user input and data validation.
+UPDATED: Setter name is now a dropdown of admin users
 """
 
 from django import forms
@@ -31,6 +32,25 @@ class CustomUserCreationForm(UserCreationForm):
             self.fields[field_name].widget.attrs.update({
                 'class': 'form-control'
             })
+    
+    def clean_member_number(self):
+        """Validate that member number is unique."""
+        member_number = self.cleaned_data.get('member_number')
+        if Member.objects.filter(member_number=member_number).exists():
+            raise forms.ValidationError(
+                f"Member number {member_number} is already registered. "
+                "Please use your unique membership number or contact the gym if you need assistance."
+            )
+        return member_number
+    
+    def clean_email(self):
+        """Validate that email is unique."""
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError(
+                "This email address is already registered. Please use a different email or try logging in."
+            )
+        return email
     
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -100,7 +120,14 @@ class ProfileEditForm(forms.ModelForm):
 class RouteForm(forms.ModelForm):
     """
     Form for adding new climbing routes.
+    Setter name is a dropdown of all admin users.
     """
+    setter_name = forms.ChoiceField(
+        label="Route Setter",
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
+    )
+    
     class Meta:
         model = Route
         fields = ['name', 'grade', 'color', 'area', 'date_set', 'setter_name']
@@ -110,15 +137,45 @@ class RouteForm(forms.ModelForm):
             'color': forms.Select(attrs={'class': 'form-control'}),
             'area': forms.Select(attrs={'class': 'form-control'}),
             'date_set': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'setter_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Route setter name'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Get all admin users (staff or members with is_admin=True)
+        admin_users = []
+        
+        # Get staff users
+        staff_users = User.objects.filter(is_staff=True).order_by('first_name', 'last_name')
+        for user in staff_users:
+            if user.first_name and user.last_name:
+                name = f"{user.first_name} {user.last_name}"
+            else:
+                name = user.username
+            admin_users.append((name, name))
+        
+        # Get members marked as admin
+        admin_members = Member.objects.filter(is_admin=True).order_by('first_name', 'last_name')
+        for member in admin_members:
+            name = f"{member.first_name} {member.last_name}"
+            # Avoid duplicates if they're already in staff
+            if (name, name) not in admin_users:
+                admin_users.append((name, name))
+        
+        # Remove duplicates and sort
+        admin_users = sorted(list(set(admin_users)), key=lambda x: x[1])
+        
+        # Set the choices
+        self.fields['setter_name'].choices = [('', '-- Select Setter --')] + admin_users
+        
         # Set today's date as default
         if not self.instance.pk:
             from django.utils import timezone
             self.fields['date_set'].initial = timezone.now().date()
+        
+        # If editing existing route, set the setter_name as initial value
+        if self.instance.pk and self.instance.setter_name:
+            self.fields['setter_name'].initial = self.instance.setter_name
 
 
 class RouteStatusForm(forms.ModelForm):

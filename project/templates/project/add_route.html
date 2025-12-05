@@ -3,7 +3,7 @@
 {% block title %}Add New Route - Central Rock Gym{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+<div class="page-header">
     <h2>Add New Route</h2>
     <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
 </div>
@@ -13,6 +13,9 @@
     
     <form method="post">
         {% csrf_token %}
+        {% if area_redirect %}
+            <input type="hidden" name="area_redirect" value="{{ area_redirect }}">
+        {% endif %}
         
         <div class="form-group">
             <label for="{{ form.name.id_for_label }}">Route Name (Optional):</label>
@@ -73,7 +76,4 @@
     </form>
 </div>
 
-<!-- TODO: Add route photo upload -->
-<!-- TODO: Add route description field -->
-<!-- TODO: Add tags/categories for routes -->
 {% endblock %}

@@ -295,6 +295,37 @@ h3 {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.route-item-with-actions {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-gray);
+    border-left: 4px solid var(--accent-orange);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.route-item-with-actions:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.route-item-content {
+    flex: 1;
+}
+
+.route-item-content h4 {
+    margin-bottom: 0.5rem;
+}
+
+.route-item-actions {
+    flex-shrink: 0;
+}
+
 .route-grade {
     background-color: var(--primary-navy);
     color: var(--white);
@@ -324,6 +355,68 @@ h3 {
 .route-color-purple { background-color: #a855f7; }
 .route-color-pink { background-color: #ec4899; }
 .route-color-black { background-color: #1f2937; }
+
+/* Area Detail Header */
+.area-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.area-detail-header h3 {
+    margin: 0;
+}
+
+.area-admin-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.inline-form {
+    display: inline-block;
+    margin: 0;
+}
+
+/* Danger Button */
+.btn-danger {
+    background-color: var(--danger-red);
+    color: var(--white);
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+/* Archive Buttons */
+.btn-archive {
+    background-color: var(--medium-gray);
+    color: var(--white);
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.3px;
+}
+
+.btn-archive:hover {
+    background-color: var(--danger-red);
+    transform: translateY(-1px);
+}
 
 /* Completions */
 .completion-item {
@@ -361,6 +454,168 @@ h3 {
     letter-spacing: 0.3px;
 }
 
+/* Archive Warning Card */
+.archive-warning-card {
+    background: #fff3cd;
+    border-left: 4px solid var(--accent-orange);
+}
+
+.archive-warning-text {
+    margin-bottom: 1.5rem;
+    color: var(--medium-gray);
+}
+
+.archive-area-form {
+    margin-top: 1rem;
+}
+
+.form-inline {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.form-control-inline {
+    flex: 1;
+    max-width: 400px;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-warning {
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
+}
+
+.btn-warning:hover {
+    background: #d67118;
+    border-color: #d67118;
+}
+
+.btn-success {
+    background: var(--success-green);
+    border-color: var(--success-green);
+}
+
+.btn-success:hover {
+    background: #1e8738;
+    border-color: #1e8738;
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    border-bottom: 2px solid var(--light-gray);
+    padding-bottom: 0;
+}
+
+.filter-tab {
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    color: var(--dark-gray);
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    color: var(--accent-orange);
+}
+
+.filter-tab.active {
+    border-bottom-color: var(--accent-orange);
+    font-weight: 700;
+    color: var(--accent-orange);
+}
+
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: 4px;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Route Management List */
+.route-management-list {
+    display: grid;
+    gap: 0;
+}
+
+.route-management-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--light-gray);
+}
+
+.route-management-item:last-child {
+    border-bottom: none;
+}
+
+.route-checkbox {
+    width: auto;
+    cursor: pointer;
+}
+
+.route-info h4 {
+    margin: 0 0 0.5rem 0;
+}
+
+.route-meta {
+    margin: 0;
+    color: var(--medium-gray);
+}
+
+.route-actions {
+    display: flex;
+    align-items: center;
+}
+
+.status-form {
+    display: inline;
+}
+
+.status-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.status-toggle input {
+    width: auto;
+    cursor: pointer;
+}
+
+.status-label {
+    font-weight: 600;
+}
+
+.status-active {
+    color: var(--success-green);
+}
+
+.status-inactive {
+    color: var(--medium-gray);
+}
+
+.empty-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--medium-gray);
+}
+
 /* Page Header */
 .page-header {
     display: flex;
@@ -378,6 +633,95 @@ h3 {
     text-align: center;
     padding: 3rem;
     color: var(--medium-gray);
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+/* Area Cards */
+.area-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+}
+
+.area-grid-horizontal {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.area-card {
+    background: var(--white);
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-gray);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.area-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.area-card-content {
+    padding: 1.5rem;
+}
+
+.area-info h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.area-info h3 a {
+    text-decoration: none;
+    color: var(--primary-navy);
+    font-weight: 700;
+}
+
+.area-info h3 a:hover {
+    color: var(--accent-orange);
+}
+
+.area-description {
+    color: var(--medium-gray);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.area-stats {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.area-route-count {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    line-height: 1;
+}
+
+.area-stats-label {
+    color: var(--medium-gray);
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.area-card-footer {
+    padding: 1rem 1.5rem;
+    background: var(--primary-navy);
+    border-top: 1px solid var(--border-gray);
+    text-align: center;
+}
+
+.area-card-footer .btn-primary {
+    width: 100%;
+    margin: 0;
 }
 
 /* Footer */
@@ -413,4 +757,59 @@ h3 {
     .form-row {
         grid-template-columns: 1fr;
     }
+    
+    .area-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Archive Routes Styles */
+.archive-summary-count {
+    color: var(--medium-gray);
+}
+
+.archive-by-area {
+    margin-top: 1rem;
+}
+
+.archive-by-area-title {
+    font-size: 1rem;
+    color: var(--medium-gray);
+    margin-bottom: 0.5rem;
+}
+
+.archive-area-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.archive-area-tag {
+    background: var(--light-gray);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+.archived-badge {
+    background: var(--medium-gray);
+    color: var(--white);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+/* Completion List Grid */
+.completion-list-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.completion-item-highlight {
+    padding: 1rem;
+    border-left: 3px solid var(--accent-orange);
+    background: var(--off-white);
 }

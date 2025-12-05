@@ -3,62 +3,119 @@
 {% block title %}Manage Routes - Central Rock Gym{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+<div class="page-header">
     <h2>Manage Routes</h2>
     <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
 </div>
 
-<div class="card">
-    <h3>Update Route Status</h3>
-    <p>Mark routes as active or archived</p>
+<div class="card archive-warning-card">
+    <h3>Quick Archive by Area</h3>
+    <p class="archive-warning-text">Archive all active routes in an entire area at once (typically used during route resets)</p>
     
-    <!-- Filter Options -->
-    <div class="filter-options">
-        <a href="?filter=all" class="filter-link {% if not request.GET.filter or request.GET.filter == 'all' %}active{% endif %}">All Routes</a>
-        <a href="?filter=active" class="filter-link {% if request.GET.filter == 'active' %}active{% endif %}">Active Only</a>
-        <a href="?filter=archived" class="filter-link {% if request.GET.filter == 'archived' %}active{% endif %}">Archived Only</a>
-    </div>
-    
-    <div class="route-management-list">
-        {% for route in routes %}
-            <div class="route-management-item">
-                <div class="route-info">
-                    <h4>
-                        {% if route.name %}
-                            {{ route.name }}
-                        {% else %}
-                            {{ route.color|title }} Route
-                        {% endif %}
-                        <span class="route-grade">{{ route.grade }}</span>
-                    </h4>
-                    <p>
-                        <span class="route-color route-color-{{ route.color }}"></span>
-                        <strong>Area:</strong> {{ route.area.name }} | 
-                        <strong>Set by:</strong> {{ route.setter_name }} | 
-                        <strong>Date:</strong> {{ route.date_set }}
-                    </p>
-                </div>
-                
-                <div class="route-actions">
-                    <form method="post" action="{% url 'project:toggle_route_status' route.pk %}" class="status-form">
-                        {% csrf_token %}
-                        <label class="status-toggle">
-                            <input type="checkbox" name="is_active" {% if route.is_active %}checked{% endif %} onchange="this.form.submit()">
-                            <span class="status-label">
-                                {% if route.is_active %}Active{% else %}Archived{% endif %}
-                            </span>
-                        </label>
-                    </form>
-                </div>
-            </div>
-        {% empty %}
-            <p>No routes found matching the current filter.</p>
-        {% endfor %}
-    </div>
+    <form method="post" action="{% url 'project:bulk_archive_routes' %}" class="archive-area-form" onsubmit="return confirm('Are you sure you want to archive ALL routes in this area?')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="archive_area">
+        <div class="form-inline">
+            <select name="area_id" class="form-control form-control-inline" required>
+                <option value="">-- Select an Area --</option>
+                {% for area in all_areas %}
+                    <option value="{{ area.id }}">{{ area.name }} ({{ area.active_count }} active routes)</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn-primary btn-warning">Archive Entire Area</button>
+        </div>
+    </form>
 </div>
 
-<!-- TODO: Add bulk operations (select multiple routes) -->
-<!-- TODO: Add route editing capability -->
-<!-- TODO: Add route deletion with confirmation -->
-<!-- TODO: Add reason field for archiving -->
+<div class="card">
+    <h3>Manage Individual Routes</h3>
+    
+    <div class="filter-tabs">
+        <a href="?filter=all" class="filter-tab {% if not request.GET.filter or request.GET.filter == 'all' %}active{% endif %}">All Routes</a>
+        <a href="?filter=active" class="filter-tab {% if request.GET.filter == 'active' %}active{% endif %}">Active Only</a>
+        <a href="?filter=archived" class="filter-tab {% if request.GET.filter == 'archived' %}active{% endif %}">Archived Only</a>
+    </div>
+    
+    <form method="post" action="{% url 'project:bulk_archive_routes' %}" id="bulkArchiveForm">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="archive_selected" id="bulkAction">
+        
+        <div class="bulk-actions-bar">
+            <button type="button" onclick="selectAll()" class="btn-secondary btn-sm">Select All</button>
+            <button type="button" onclick="deselectAll()" class="btn-secondary btn-sm">Deselect All</button>
+            <button type="button" onclick="archiveSelected()" class="btn-warning btn-sm">Archive Selected</button>
+            <button type="button" onclick="restoreSelected()" class="btn-success btn-sm">Restore Selected</button>
+        </div>
+        
+        <div class="route-management-list">
+            {% for route in routes %}
+                <div class="route-management-item">
+                    <input type="checkbox" name="route_ids" value="{{ route.id }}" class="route-checkbox">
+                    
+                    <div class="route-info">
+                        <h4>
+                            {% if route.name %}{{ route.name }}{% else %}{{ route.color|title }} Route{% endif %}
+                            <span class="route-grade">{{ route.grade }}</span>
+                            {% if not route.is_active %}
+                                <span class="archived-badge">ARCHIVED</span>
+                            {% endif %}
+                        </h4>
+                        <p class="route-meta">
+                            <span class="route-color route-color-{{ route.color }}"></span>
+                            <strong>Area:</strong> {{ route.area.name }} | 
+                            <strong>Set by:</strong> {{ route.setter_name }} | 
+                            <strong>Date:</strong> {{ route.date_set }}
+                        </p>
+                    </div>
+                    
+                    <div class="route-actions">
+                        <form method="post" action="{% url 'project:toggle_route_status' route.pk %}" class="status-form">
+                            {% csrf_token %}
+                            <label class="status-toggle">
+                                <input type="checkbox" name="is_active" {% if route.is_active %}checked{% endif %} onchange="this.form.submit()">
+                                <span class="status-label {% if route.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if route.is_active %}Active{% else %}Archived{% endif %}
+                                </span>
+                            </label>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="empty-message">No routes found matching the current filter.</p>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+
+<script>
+function selectAll() {
+    document.querySelectorAll('.route-checkbox').forEach(cb => cb.checked = true);
+}
+function deselectAll() {
+    document.querySelectorAll('.route-checkbox').forEach(cb => cb.checked = false);
+}
+function archiveSelected() {
+    const checked = document.querySelectorAll('.route-checkbox:checked');
+    if (checked.length === 0) {
+        alert('Please select at least one route.');
+        return;
+    }
+    if (confirm(`Archive ${checked.length} selected route(s)?`)) {
+        document.getElementById('bulkAction').value = 'archive_selected';
+        document.getElementById('bulkArchiveForm').submit();
+    }
+}
+function restoreSelected() {
+    const checked = document.querySelectorAll('.route-checkbox:checked');
+    if (checked.length === 0) {
+        alert('Please select at least one route.');
+        return;
+    }
+    if (confirm(`Restore ${checked.length} selected route(s)?`)) {
+        document.getElementById('bulkAction').value = 'restore_selected';
+        document.getElementById('bulkArchiveForm').submit();
+    }
+}
+</script>
+
 {% endblock %}

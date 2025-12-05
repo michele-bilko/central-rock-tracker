@@ -22,31 +22,51 @@
     </div>
 </div>
 
-<!-- Routes in this area -->
 <div class="card">
-    <h3>Routes in {{ area.name }}</h3>
+    <div class="area-detail-header">
+        <h3>Routes in {{ area.name }}</h3>
+        
+        {% if user.is_staff or user.member.is_admin %}
+            <div class="area-admin-actions">
+                <a href="{% url 'project:add_route' %}?area={{ area.id }}" class="btn-primary">+ Add Route</a>
+                <form method="post" action="{% url 'project:bulk_archive_routes' %}" class="inline-form" onsubmit="return confirm('Archive ALL routes in {{ area.name }}?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="archive_area">
+                    <input type="hidden" name="area_id" value="{{ area.id }}">
+                    <button type="submit" class="btn-danger">Archive All Routes</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
     
     {% if routes %}
         <div class="route-list">
             {% for route in routes %}
-                <div class="route-item">
-                    <h4>
-                        <a href="{% url 'project:route_detail' route.pk %}">
-                            {% if route.name %}
-                                {{ route.name }}
-                            {% else %}
-                                {{ route.color|title }} Route
-                            {% endif %}
-                        </a>
-                        <span class="route-grade">{{ route.grade }}</span>
-                    </h4>
+                <div class="route-item-with-actions">
+                    <div class="route-item-content">
+                        <h4>
+                            <a href="{% url 'project:route_detail' route.pk %}">
+                                {% if route.name %}{{ route.name }}{% else %}{{ route.color|title }} Route{% endif %}
+                            </a>
+                            <span class="route-grade">{{ route.grade }}</span>
+                        </h4>
+                        
+                        <p class="route-meta">
+                            <span class="route-color route-color-{{ route.color }}"></span>
+                            <strong>Set by:</strong> {{ route.setter_name }} | 
+                            <strong>Date:</strong> {{ route.date_set }} |
+                            <strong>Sends:</strong> {{ route.completion_count }}
+                        </p>
+                    </div>
                     
-                    <p>
-                        <span class="route-color route-color-{{ route.color }}"></span>
-                        <strong>Set by:</strong> {{ route.setter_name }} | 
-                        <strong>Date:</strong> {{ route.date_set }} |
-                        <strong>Sends:</strong> {{ route.completion_count }}
-                    </p>
+                    {% if user.is_staff or user.member.is_admin %}
+                        <div class="route-item-actions">
+                            <form method="post" action="{% url 'project:toggle_route_status' route.pk %}" onsubmit="return confirm('Archive {{ route.name|default:route.color }}?')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-archive">Archive</button>
+                            </form>
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>
@@ -55,12 +75,8 @@
     {% endif %}
 </div>
 
-<!-- Back to areas -->
 <div class="navigation">
     <a href="{% url 'project:area_list' %}" class="btn-secondary">← Back to All Areas</a>
 </div>
 
-<!-- TODO: Add area image/photo -->
-<!-- TODO: Add area-specific statistics (grade distribution, etc.) -->
-<!-- TODO: Add route filtering within area -->
 {% endblock %}

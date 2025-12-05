@@ -3,22 +3,37 @@
 {% block title %}Areas - Central Rock Gym{% endblock %}
 
 {% block content %}
-<h2>Climbing Areas</h2>
+<div class="page-header">
+    <h2>Climbing Areas</h2>
+    <a href="{% url 'project:home' %}" class="btn-secondary">← Back to Home</a>
+</div>
 
-<div class="area-list">
+<div class="area-grid-horizontal">
     {% for area in areas %}
-        <div class="area-item">
-            <h3>{{ area.name }}</h3>
-            {% if area.description %}
-                <p>{{ area.description }}</p>
-            {% endif %}
-            <p><small>Area ID: {{ area.pk }} (link coming soon)</small></p>
+        <div class="area-card">
+            <div class="area-card-content">
+                <div class="area-info">
+                    <h3>
+                        <a href="{% url 'project:area_detail' area.pk %}">{{ area.name }}</a>
+                    </h3>
+                    {% if area.description %}
+                        <p class="area-description">{{ area.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="area-stats">
+                    <div class="area-route-count">{{ area.route_count }}</div>
+                    <div class="area-stats-label">active route{{ area.route_count|pluralize }}</div>
+                </div>
+            </div>
+            <div class="area-card-footer">
+                <a href="{% url 'project:area_detail' area.pk %}" class="btn-primary">View Routes</a>
+            </div>
         </div>
     {% empty %}
-        <p>No areas found.</p>
+        <div class="card empty-state">
+            <p>No areas found.</p>
+        </div>
     {% endfor %}
 </div>
 
-<!-- TODO: Add area images -->
-<!-- TODO: Add route count per area -->
 {% endblock %}

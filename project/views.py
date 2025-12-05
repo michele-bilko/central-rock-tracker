@@ -1,8 +1,9 @@
 """
 project/views.py
 Author: Michele Bilko (mbilko@bu.edu)
-CS412 Final Project - Central Rock Gym Route Tracking System
+Central Rock Gym Route Tracking System
 Views for handling web requests and user interactions.
+UPDATED: Added archive functionality and bulk operations
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
@@ -15,16 +16,13 @@ from django.db.models import Count, Q
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.http import JsonResponse
 from .models import Member, Area, Route, Completion
 from .forms import CustomUserCreationForm, RouteForm, RouteStatusForm, CompletionForm, ProfileEditForm
 
 
 def home_view(request):
-    """
-    Simple home page view.
-    TODO: Add personalized content for logged-in users
-    TODO: Add recent activity from user's followed climbers
-    """
+    """Simple home page view."""
     context = {
         'total_areas': Area.objects.count(),
         'total_routes': Route.objects.filter(is_active=True).count(),
@@ -35,9 +33,7 @@ def home_view(request):
 
 
 def login_view(request):
-    """
-    Custom login view to handle template path issues.
-    """
+    """Custom login view to handle template path issues."""
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -48,29 +44,37 @@ def login_view(request):
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.first_name or user.username}!')
                 return redirect('project:home')
+            else:
+                messages.error(request, 'Invalid username or password.')
+        else:
+            messages.error(request, 'Invalid username or password.')
     else:
         form = AuthenticationForm()
     
-    return render(request, 'registration/login.html', {'form': form})
+    return render(request, 'project/login.html', {'form': form})
 
 
 def register_view(request):
-    """
-    User registration view.
-    TODO: Add email verification
-    TODO: Add social login options
-    """
+    """Custom registration view with better error handling."""
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Account created successfully! Welcome to Central Rock Gym!')
-            return redirect('project:home')
+            try:
+                user = form.save()
+                login(request, user)
+                messages.success(request, f'Welcome to Central Rock Gym, {user.first_name}!')
+                return redirect('project:home')
+            except Exception as e:
+                # Catch any unexpected errors during save
+                messages.error(request, 'An error occurred during registration. Please try again or contact support.')
+                # Log the error for debugging
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f'Registration error: {str(e)}')
     else:
         form = CustomUserCreationForm()
     
-    return render(request, 'registration/register.html', {'form': form})
+    return render(request, 'project/register.html', {'form': form})
 
 
 def is_admin(user):
@@ -79,10 +83,25 @@ def is_admin(user):
 
 
 @user_passes_test(is_admin)
+def admin_dashboard_view(request):
+    """Admin dashboard with statistics."""
+    total_routes = Route.objects.count()
+    active_routes = Route.objects.filter(is_active=True).count()
+    archived_routes = Route.objects.filter(is_active=False).count()
+    recent_completions = Completion.objects.select_related('member', 'route').order_by('-date_completed')[:10]
+    
+    context = {
+        'total_routes': total_routes,
+        'active_routes': active_routes,
+        'archived_routes': archived_routes,
+        'recent_completions': recent_completions,
+    }
+    return render(request, 'project/admin_dashboard.html', context)
+
+
+@user_passes_test(is_admin)
 def admin_members_view(request):
-    """
-    Admin view to manage members with delete functionality.
-    """
+    """Admin view to manage members with delete functionality."""
     search_query = request.GET.get('search', '')
     
     members = Member.objects.select_related('user').order_by('first_name', 'last_name')
@@ -104,14 +123,12 @@ def admin_members_view(request):
         'total_members': Member.objects.count(),
     }
     
-    return render(request, 'project/admin_members.html', context)
+    return render(request, 'project/manage_members.html', context)
 
 
 @user_passes_test(is_admin)
 def delete_member_view(request, pk):
-    """
-    Admin view to delete a member account.
-    """
+    """Admin view to delete a member account."""
     member = get_object_or_404(Member, pk=pk)
     
     if request.method == 'POST':
@@ -138,52 +155,40 @@ def delete_member_view(request, pk):
         'completion_count': completion_count,
     }
     
-    return render(request, 'project/delete_member_confirm.html', context)
+    return render(request, 'project/delete_member.html', context)
 
 
-@user_passes_test(is_admin)
-def admin_dashboard_view(request):
-    """
-    Admin dashboard with quick stats and management links.
-    TODO: Add more detailed analytics
-    TODO: Add member management section
-    """
-    context = {
-        'total_routes': Route.objects.count(),
-        'active_routes': Route.objects.filter(is_active=True).count(),
-        'archived_routes': Route.objects.filter(is_active=False).count(),
-        'recent_completions': Completion.objects.select_related('member', 'route').order_by('-date_completed')[:10],
-    }
-    return render(request, 'project/admin_dashboard.html', context)
-
-
-@user_passes_test(is_admin)
 @user_passes_test(is_admin)
 def add_route_view(request):
-    """
-    Admin view to add new routes.
-    TODO: Add bulk route creation
-    TODO: Add route photo upload
-    """
+    """Admin view to add new routes."""
     if request.method == 'POST':
         form = RouteForm(request.POST)
         if form.is_valid():
             route = form.save()
             messages.success(request, f'Route "{route}" added successfully!')
+            # Redirect back to the area if area_id was provided
+            area_id = request.POST.get('area_redirect')
+            if area_id:
+                return redirect('project:area_detail', pk=area_id)
             return redirect('project:admin_dashboard')
     else:
         form = RouteForm()
+        # Pre-select area if provided in URL
+        area_id = request.GET.get('area')
+        if area_id:
+            form.fields['area'].initial = area_id
     
-    return render(request, 'project/add_route.html', {'form': form})
+    context = {
+        'form': form,
+        'area_redirect': request.GET.get('area', '')
+    }
+    
+    return render(request, 'project/add_route.html', context)
 
 
 @user_passes_test(is_admin)
 def manage_routes_view(request):
-    """
-    Admin view to manage existing routes.
-    TODO: Add bulk operations
-    TODO: Add route editing capability
-    """
+    """Admin view to manage existing routes with bulk operations."""
     filter_type = request.GET.get('filter', 'all')
     
     if filter_type == 'active':
@@ -195,20 +200,27 @@ def manage_routes_view(request):
     
     routes = routes.select_related('area').order_by('-date_set')
     
-    return render(request, 'project/manage_routes.html', {'routes': routes})
+    # Get all areas with active route counts for the "Archive by Area" dropdown
+    all_areas = Area.objects.annotate(
+        active_count=Count('routes', filter=Q(routes__is_active=True))
+    ).filter(active_count__gt=0).order_by('name')
+    
+    context = {
+        'routes': routes,
+        'filter_type': filter_type,
+        'all_areas': all_areas,
+    }
+    
+    return render(request, 'project/manage_routes.html', context)
 
 
 @user_passes_test(is_admin)
 def toggle_route_status(request, pk):
-    """
-    Admin view to toggle route active/archived status.
-    TODO: Add reason field for status changes
-    TODO: Add confirmation step for archiving
-    """
+    """Toggle route active/archived status."""
     route = get_object_or_404(Route, pk=pk)
     
     if request.method == 'POST':
-        route.is_active = 'is_active' in request.POST
+        route.is_active = not route.is_active
         route.save()
         
         status = "activated" if route.is_active else "archived"
@@ -217,136 +229,86 @@ def toggle_route_status(request, pk):
     return redirect('project:manage_routes')
 
 
-class AreaListView(ListView):
+@user_passes_test(is_admin)
+def archived_routes_view(request):
     """
-    Display list of all climbing areas.
-    TODO: Add area statistics (route count, completion count)
+    NEW: View all archived routes with filtering by area.
     """
-    model = Area
-    template_name = 'project/area_list.html'
-    context_object_name = 'areas'
-
-
-class AreaDetailView(DetailView):
-    """
-    Display detailed view of a specific area with its routes.
-    TODO: Add area-specific statistics and analytics
-    """
-    model = Area
-    template_name = 'project/area_detail.html'
-    context_object_name = 'area'
+    area_filter = request.GET.get('area', '')
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        area = self.get_object()
-        
-        # Get active routes in this area with completion counts
-        routes = Route.objects.filter(area=area, is_active=True).annotate(
-            completion_count=Count('completions')
-        ).order_by('-date_set')
-        
-        context['routes'] = routes
-        context['total_completions'] = sum(route.completion_count for route in routes)
-        
-        return context
-
-
-class RouteListView(ListView):
-    """
-    Display list of all routes.
-    TODO: Add filtering and search capabilities
-    """
-    model = Route
-    template_name = 'project/route_list.html'
-    context_object_name = 'routes'
+    archived_routes = Route.objects.filter(is_active=False).select_related('area').order_by('-date_set')
     
-    def get_queryset(self):
-        return Route.objects.filter(is_active=True).select_related('area').order_by('-date_set')
+    if area_filter:
+        archived_routes = archived_routes.filter(area__id=area_filter)
+    
+    # Get all areas for the filter dropdown
+    areas = Area.objects.all().order_by('name')
+    
+    # Count routes by area
+    area_counts = Route.objects.filter(is_active=False).values('area__name').annotate(
+        count=Count('id')
+    ).order_by('area__name')
+    
+    context = {
+        'archived_routes': archived_routes,
+        'areas': areas,
+        'selected_area': area_filter,
+        'total_archived': archived_routes.count(),
+        'area_counts': area_counts,
+    }
+    
+    return render(request, 'project/archived_routes.html', context)
 
 
-class RouteDetailView(DetailView):
+@user_passes_test(is_admin)
+def bulk_archive_routes(request):
     """
-    Display detailed view of a specific route with completion form.
-    TODO: Add route photos and beta
-    TODO: Add difficulty consensus calculation
+    NEW: Archive multiple routes at once, typically by area.
     """
-    model = Route
-    template_name = 'project/route_detail.html'
-    context_object_name = 'route'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        route = self.get_object()
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        area_id = request.POST.get('area_id')
+        route_ids = request.POST.getlist('route_ids')
         
-        # Get completions for this route
-        completions = Completion.objects.filter(route=route).select_related('member').order_by('-date_completed')
-        context['completions'] = completions
-        
-        # Check if current user has completed this route
-        if self.request.user.is_authenticated:
-            try:
-                member = self.request.user.member
-                user_completion = completions.filter(member=member).first()
-                context['user_has_completed'] = bool(user_completion)
-                context['user_completion'] = user_completion
-            except:
-                context['user_has_completed'] = False
-        
-        # Add completion form for logged-in users
-        if self.request.user.is_authenticated and route.is_active:
-            context['form'] = CompletionForm()
-        
-        return context
-    
-    def post(self, request, *args, **kwargs):
-        """
-        Handle completion form submission.
-        """
-        route = self.get_object()
-        
-        if not request.user.is_authenticated:
-            messages.error(request, 'You must be logged in to log completions.')
-            return redirect('project:login')
-        
-        try:
-            member = request.user.member
-        except:
-            messages.error(request, 'Member profile not found.')
-            return redirect('project:route_detail', pk=route.pk)
-        
-        # Check if user already completed this route
-        if Completion.objects.filter(member=member, route=route).exists():
-            messages.warning(request, 'You have already logged a completion for this route.')
-            return redirect('project:route_detail', pk=route.pk)
-        
-        form = CompletionForm(request.POST)
-        if form.is_valid():
-            completion = form.save(commit=False)
-            completion.member = member
-            completion.route = route
-            completion.save()
+        if action == 'archive_area' and area_id:
+            # Archive all active routes in a specific area
+            area = get_object_or_404(Area, pk=area_id)
+            routes = Route.objects.filter(area=area, is_active=True)
+            count = routes.count()
+            routes.update(is_active=False)
+            messages.success(request, f'Archived {count} route(s) in {area.name}.')
             
-            messages.success(request, f'Completion logged for "{route}"! Great job!')
-            return redirect('project:route_detail', pk=route.pk)
+        elif action == 'archive_selected' and route_ids:
+            # Archive specific selected routes
+            routes = Route.objects.filter(pk__in=route_ids, is_active=True)
+            count = routes.count()
+            routes.update(is_active=False)
+            messages.success(request, f'Archived {count} selected route(s).')
+            
+        elif action == 'restore_selected' and route_ids:
+            # Restore specific selected routes
+            routes = Route.objects.filter(pk__in=route_ids, is_active=False)
+            count = routes.count()
+            routes.update(is_active=True)
+            messages.success(request, f'Restored {count} selected route(s).')
         
-        # If form is invalid, reload page with errors
-        context = self.get_context_data()
-        context['form'] = form
-        return render(request, self.template_name, context)
+        return redirect(request.META.get('HTTP_REFERER', 'project:admin_dashboard'))
+    
+    return redirect('project:admin_dashboard')
 
 
 @user_passes_test(is_admin)
 def admin_completions_view(request):
-    """
-    Admin view to see all route completions with filtering options.
-    """
-    # Get filter parameters
-    route_filter = request.GET.get('route')
-    member_filter = request.GET.get('member')
-    area_filter = request.GET.get('area')
-    date_filter = request.GET.get('date_range', '30')  # Default to last 30 days
+    """Admin view to see all completions with filtering."""
+    from django.core.paginator import Paginator
     
-    # Start with all completions
+    # Get filter parameters
+    route_filter = request.GET.get('route', '')
+    member_filter = request.GET.get('member', '')
+    area_filter = request.GET.get('area', '')
+    date_range = request.GET.get('date_range', '30')
+    
+    # Base queryset
     completions = Completion.objects.select_related('member', 'route', 'route__area').order_by('-date_completed')
     
     # Apply filters
@@ -359,28 +321,23 @@ def admin_completions_view(request):
     if area_filter:
         completions = completions.filter(route__area__id=area_filter)
     
-    # Date range filter
-    if date_filter and date_filter != 'all':
-        try:
-            days = int(date_filter)
-            cutoff_date = timezone.now().date() - timedelta(days=days)
-            completions = completions.filter(date_completed__gte=cutoff_date)
-        except ValueError:
-            pass
-    
-    # Get filter options for dropdowns
-    all_routes = Route.objects.filter(is_active=True).order_by('area__name', 'grade')
-    all_members = Member.objects.order_by('first_name', 'last_name')
-    all_areas = Area.objects.order_by('name')
+    if date_range != 'all':
+        days = int(date_range)
+        cutoff_date = timezone.now().date() - timedelta(days=days)
+        completions = completions.filter(date_completed__gte=cutoff_date)
     
     # Pagination
-    from django.core.paginator import Paginator
-    paginator = Paginator(completions, 50)  # Show 50 completions per page
+    paginator = Paginator(completions, 20)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    completions_page = paginator.get_page(page_number)
+    
+    # Get all options for filters
+    all_routes = Route.objects.all().order_by('name')
+    all_members = Member.objects.all().order_by('first_name', 'last_name')
+    all_areas = Area.objects.all().order_by('name')
     
     context = {
-        'completions': page_obj,
+        'completions': completions_page,
         'all_routes': all_routes,
         'all_members': all_members,
         'all_areas': all_areas,
@@ -388,7 +345,7 @@ def admin_completions_view(request):
             'route': route_filter,
             'member': member_filter,
             'area': area_filter,
-            'date_range': date_filter,
+            'date_range': date_range,
         },
         'total_completions': completions.count(),
     }
@@ -396,91 +353,117 @@ def admin_completions_view(request):
     return render(request, 'project/admin_completions.html', context)
 
 
-@login_required
-def profile_view(request):
+# Class-based views
+
+class AreaListView(ListView):
     """
-    User profile page showing personal stats and recent completions.
+    Display list of all climbing areas with route counts.
+    Areas are displayed in a specific order: The Dugout, The Gray Monster, The Warning Track, The Bullpen
     """
-    try:
-        member = request.user.member
-    except:
-        # If no member profile exists, create one
-        member = Member.objects.create(
-            user=request.user,
-            first_name=request.user.first_name or 'Unknown',
-            last_name=request.user.last_name or 'User',
-            email=request.user.email,
-            member_number=request.user.id + 10000  # Simple member number generation
+    model = Area
+    template_name = 'project/area_list.html'
+    context_object_name = 'areas'
+    
+    def get_queryset(self):
+        """Add route count annotation and order areas in specific sequence."""
+        from django.db.models import Case, When
+        
+        # Define the custom order
+        area_order = ['The Dugout', 'The Gray Monster', 'The Warning Track', 'The Bullpen']
+        
+        # Create Case/When for ordering
+        ordering = Case(
+            *[When(name=name, then=pos) for pos, name in enumerate(area_order)],
+            default=len(area_order)
         )
-    
-    # Get user's completions with related data
-    completions = Completion.objects.filter(member=member).select_related('route', 'route__area').order_by('-date_completed')
-    
-    # Calculate statistics
-    total_completions = completions.count()
-    unique_routes = completions.values('route').distinct().count()
-    
-    # Grade distribution
-    grade_counts = {}
-    for completion in completions:
-        grade = completion.route.grade
-        grade_counts[grade] = grade_counts.get(grade, 0) + 1
-    
-    # Recent activity (last 30 days)
-    thirty_days_ago = timezone.now().date() - timedelta(days=30)
-    recent_completions = completions.filter(date_completed__gte=thirty_days_ago)
-    
-    # Areas climbed
-    areas_climbed = completions.values('route__area__name').annotate(
-        count=Count('id')
-    ).order_by('-count')
-    
-    context = {
-        'member': member,
-        'completions': completions[:10],  # Show recent 10
-        'total_completions': total_completions,
-        'unique_routes': unique_routes,
-        'grade_counts': grade_counts,
-        'recent_activity_count': recent_completions.count(),
-        'areas_climbed': areas_climbed,
-    }
-    
-    return render(request, 'project/profile.html', context)
+        
+        return Area.objects.annotate(
+            route_count=Count('routes', filter=Q(routes__is_active=True)),
+            custom_order=ordering
+        ).order_by('custom_order', 'name')
 
 
-@login_required
-def edit_profile_view(request):
-    """
-    Edit user profile information.
-    """
-    try:
-        member = request.user.member
-    except:
-        member = Member.objects.create(
-            user=request.user,
-            first_name=request.user.first_name or 'Unknown',
-            last_name=request.user.last_name or 'User',
-            email=request.user.email,
-            member_number=request.user.id + 10000
-        )
+class AreaDetailView(DetailView):
+    """Display detailed view of a specific area with its routes."""
+    model = Area
+    template_name = 'project/area_detail.html'
+    context_object_name = 'area'
     
-    if request.method == 'POST':
-        form = ProfileEditForm(request.POST, instance=member, user=request.user)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Only show active routes with completion counts
+        context['routes'] = self.object.routes.filter(is_active=True).annotate(
+            completion_count=Count('completions')
+        ).order_by('-date_set')
+        context['total_completions'] = Completion.objects.filter(
+            route__area=self.object
+        ).count()
+        return context
+
+
+class RouteListView(ListView):
+    """Display list of all active routes."""
+    model = Route
+    template_name = 'project/route_list.html'
+    context_object_name = 'routes'
+    
+    def get_queryset(self):
+        """Only show active routes."""
+        return Route.objects.filter(is_active=True).select_related('area').order_by('-date_set')
+
+
+class RouteDetailView(DetailView):
+    """Display detailed view of a specific route with completion form."""
+    model = Route
+    template_name = 'project/route_detail.html'
+    context_object_name = 'route'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get recent completions
+        context['completions'] = self.object.completions.select_related('member').order_by('-date_completed')[:10]
+        
+        # Check if current user has completed this route
+        if self.request.user.is_authenticated and hasattr(self.request.user, 'member'):
+            try:
+                context['user_completion'] = Completion.objects.get(
+                    member=self.request.user.member,
+                    route=self.object
+                )
+                context['user_has_completed'] = True
+            except Completion.DoesNotExist:
+                context['user_has_completed'] = False
+                context['form'] = CompletionForm()
+        
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        """Handle completion form submission."""
+        self.object = self.get_object()
+        
+        if not request.user.is_authenticated or not hasattr(request.user, 'member'):
+            messages.error(request, 'You must be logged in to log completions.')
+            return redirect('project:login')
+        
+        form = CompletionForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('project:profile')
-    else:
-        form = ProfileEditForm(instance=member, user=request.user)
-    
-    return render(request, 'project/edit_profile.html', {'form': form})
+            completion = form.save(commit=False)
+            completion.member = request.user.member
+            completion.route = self.object
+            try:
+                completion.save()
+                messages.success(request, f'Successfully logged completion of {self.object}!')
+                return redirect('project:route_detail', pk=self.object.pk)
+            except:
+                messages.error(request, 'You have already logged this route.')
+        
+        return self.get(request, *args, **kwargs)
 
 
 class MemberListView(UserPassesTestMixin, ListView):
     """
     Display list of all members - ADMIN ONLY.
-    TODO: Add member search and filtering
-    TODO: Add member statistics
     """
     model = Member
     template_name = 'project/member_list.html'
@@ -494,9 +477,71 @@ class MemberListView(UserPassesTestMixin, ListView):
         )
     
     def handle_no_permission(self):
-        """Redirect non-admin users with a message."""
-        messages.error(self.request, 'You must be an administrator to view the member directory.')
+        """Redirect non-admin users with message."""
+        messages.error(self.request, 'You must be an admin to view the member list.')
+        return redirect('project:home')
+
+
+@login_required
+def profile_view(request):
+    """Display user's profile and climbing statistics."""
+    if not hasattr(request.user, 'member'):
+        messages.error(request, 'No member profile found.')
         return redirect('project:home')
     
-    def get_queryset(self):
-        return Member.objects.order_by('first_name', 'last_name')
+    member = request.user.member
+    
+    # Get completions
+    completions = member.completions.select_related('route', 'route__area').order_by('-date_completed')[:10]
+    
+    # Calculate statistics
+    total_completions = member.completions.count()
+    unique_routes = member.completions.values('route').distinct().count()
+    
+    # Recent activity (last 30 days)
+    thirty_days_ago = timezone.now().date() - timedelta(days=30)
+    recent_activity_count = member.completions.filter(date_completed__gte=thirty_days_ago).count()
+    
+    # Grade distribution
+    grade_counts = member.completions.values('route__grade').annotate(
+        count=Count('id')
+    ).order_by('route__grade')
+    grade_counts = {item['route__grade']: item['count'] for item in grade_counts}
+    
+    # Areas climbed
+    areas_climbed = member.completions.values('route__area__name').annotate(
+        count=Count('id')
+    ).order_by('-count')
+    
+    context = {
+        'member': member,
+        'completions': completions,
+        'total_completions': total_completions,
+        'unique_routes': unique_routes,
+        'recent_activity_count': recent_activity_count,
+        'grade_counts': grade_counts,
+        'areas_climbed': areas_climbed,
+    }
+    
+    return render(request, 'project/profile.html', context)
+
+
+@login_required
+def edit_profile_view(request):
+    """Allow users to edit their profile."""
+    if not hasattr(request.user, 'member'):
+        messages.error(request, 'No member profile found.')
+        return redirect('project:home')
+    
+    member = request.user.member
+    
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST, instance=member, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('project:profile')
+    else:
+        form = ProfileEditForm(instance=member, user=request.user)
+    
+    return render(request, 'project/edit_profile.html', {'form': form})

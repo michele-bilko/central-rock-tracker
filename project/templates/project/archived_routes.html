@@ -1,0 +1,122 @@
+{% extends 'project/base.html' %}
+
+{% block title %}Archived Routes - Admin - Central Rock Gym{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Archived Routes</h2>
+    <a href="{% url 'project:admin_dashboard' %}" class="btn-secondary">← Back to Admin Dashboard</a>
+</div>
+
+<div class="card">
+    <div class="page-header">
+        <h3>Archive Summary</h3>
+        <div class="archive-summary-count">
+            <strong>{{ total_archived }}</strong> archived route{{ total_archived|pluralize }}
+        </div>
+    </div>
+    
+    {% if area_counts %}
+    <div class="archive-by-area">
+        <h4 class="archive-by-area-title">By Area:</h4>
+        <div class="archive-area-tags">
+            {% for area in area_counts %}
+                <div class="archive-area-tag">
+                    <strong>{{ area.area__name }}</strong>: {{ area.count }} route{{ area.count|pluralize }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Filter Archived Routes</h3>
+    <form method="get">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="area">Filter by Area:</label>
+                <select name="area" id="area" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Areas</option>
+                    {% for area in areas %}
+                        <option value="{{ area.id }}" {% if selected_area == area.id|stringformat:"s" %}selected{% endif %}>
+                            {{ area.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        {% if selected_area %}
+            <a href="{% url 'project:archived_routes' %}" class="btn-secondary">Clear Filter</a>
+        {% endif %}
+    </form>
+</div>
+
+<div class="card">
+    <div class="page-header">
+        <h3>Archived Routes</h3>
+        {% if selected_area %}
+            <form method="post" action="{% url 'project:bulk_archive_routes' %}" onsubmit="return confirm('Restore all routes in this area?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="restore_area">
+                <input type="hidden" name="area_id" value="{{ selected_area }}">
+                <button type="submit" class="btn-primary">Restore All in This Area</button>
+            </form>
+        {% endif %}
+    </div>
+    
+    {% if archived_routes %}
+        <form method="post" action="{% url 'project:bulk_archive_routes' %}" id="bulkForm">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="restore_selected" id="bulkAction">
+            
+            <div class="bulk-actions-bar">
+                <button type="button" onclick="selectAll()" class="btn-secondary">Select All</button>
+                <button type="button" onclick="deselectAll()" class="btn-secondary">Deselect All</button>
+                <button type="submit" class="btn-primary" onclick="return confirm('Restore selected routes?')">Restore Selected</button>
+            </div>
+            
+            <div class="route-management-list">
+                {% for route in archived_routes %}
+                    <div class="route-management-item">
+                        <input type="checkbox" name="route_ids" value="{{ route.id }}" class="route-checkbox">
+                        
+                        <div class="route-info">
+                            <h4>
+                                {% if route.name %}{{ route.name }}{% else %}{{ route.color|title }} Route{% endif %}
+                                <span class="route-grade">{{ route.grade }}</span>
+                                <span class="archived-badge">ARCHIVED</span>
+                            </h4>
+                            <p class="route-meta">
+                                <span class="route-color route-color-{{ route.color }}"></span>
+                                <strong>Area:</strong> {{ route.area.name }} | 
+                                <strong>Set by:</strong> {{ route.setter_name }} | 
+                                <strong>Date:</strong> {{ route.date_set }}
+                            </p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </form>
+    {% else %}
+        <div class="empty-state">
+            <h4>No Archived Routes</h4>
+            {% if selected_area %}
+                <p>No archived routes found in this area.</p>
+            {% else %}
+                <p>No routes have been archived yet.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function selectAll() {
+    document.querySelectorAll('.route-checkbox').forEach(cb => cb.checked = true);
+}
+function deselectAll() {
+    document.querySelectorAll('.route-checkbox').forEach(cb => cb.checked = false);
+}
+</script>
+
+{% endblock %}
